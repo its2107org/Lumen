@@ -1,0 +1,13 @@
+192.168.64.12 getPilot {}
+192.168.64.12 getSystemConfig {}
+192.168.64.12 getModelConfig {}
+192.168.64.12 setPilot {"b": 128, "dimming": 100, "g": 0, "r": 255, "state": true}
+192.168.64.12 setPilot {"dimming": 42, "state": true}
+192.168.64.12 getPilot {}
+192.168.64.12 setPilot {"state": false}
+192.168.64.12 getPilot {}
+192.168.64.12 setPilot {"dimming": 42, "sceneId": 5, "speed": 150, "state": true}
+192.168.64.12 getPilot {}
+192.168.64.12 getPilot {}
+192.168.64.12 getPilot {}
+192.168.64.12 setPilot {"state": true}

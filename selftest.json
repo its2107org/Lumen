@@ -1,0 +1,26 @@
+{
+  "after" : {
+    "b" : "128",
+    "dimming" : "42",
+    "g" : "0",
+    "mac" : "a8bb50aabbcc",
+    "r" : "255",
+    "rssi" : "-52",
+    "sceneId" : "0",
+    "state" : "1"
+  },
+  "found" : [
+    {
+      "address" : "192.168.64.12",
+      "kind" : "colour",
+      "model" : "ESP01_SHRGB1C_31",
+      "name" : "Light 1",
+      "range" : "2200-6500"
+    }
+  ],
+  "networkSearchFoundIt" : true,
+  "problems" : [
+
+  ],
+  "result" : "all passed"
+}
