@@ -97,7 +97,8 @@ enum LightControl {
                 let newState = change.applied(to: bulb.state)
                 let params = change.params(for: bulb, newState: newState)
                 group.addTask {
-                    let ok = WizLink.offline ? true : await WizLink.setPilot(params, on: bulb.address)
+                    var ok = true
+                    if !WizLink.offline { ok = await WizLink.setPilot(params, on: bulb.address) }
                     return (bulb.id, newState, ok)
                 }
             }
@@ -130,7 +131,10 @@ enum LightControl {
         var home = home
         let results = await withTaskGroup(of: (String, [String: Any]?).self) { group in
             for bulb in home.bulbs {
-                group.addTask { (bulb.id, await WizLink.request("getPilot", to: bulb.address, timeout: 0.6, attempts: 2)?["result"] as? [String: Any]) }
+                group.addTask {
+                    let reply = await WizLink.request("getPilot", to: bulb.address, timeout: 0.6, attempts: 2)
+                    return (bulb.id, reply?["result"] as? [String: Any])
+                }
             }
             var collected: [(String, [String: Any]?)] = []
             for await result in group { collected.append(result) }

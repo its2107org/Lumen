@@ -89,8 +89,8 @@ struct ColourWheel: View {
                     .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
                 if let point {
                     let rgb = Color.rgb(hue: point.hue, saturation: point.saturation)
-                    let angle = point.hue * 2 * .pi
-                    let distance = point.saturation * (radius - 18)
+                    let angle = CGFloat(point.hue * 2 * .pi)
+                    let distance = CGFloat(point.saturation) * (radius - 18)
                     Circle()
                         .fill(rgb.color)
                         .overlay(Circle().strokeBorder(.white, lineWidth: 4))
@@ -105,11 +105,11 @@ struct ColourWheel: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { drag in
-                        let dx = drag.location.x - radius
-                        let dy = drag.location.y - radius
+                        let dx = Double(drag.location.x - radius)
+                        let dy = Double(drag.location.y - radius)
                         var hue = atan2(dy, dx) / (2 * .pi)
                         if hue < 0 { hue += 1 }
-                        let saturation = min(1, hypot(dx, dy) / (radius - 18))
+                        let saturation = min(1, hypot(dx, dy) / Double(radius - 18))
                         let previous = dragPoint
                         dragPoint = (hue, saturation)
                         let rgb = Color.rgb(hue: hue, saturation: saturation)

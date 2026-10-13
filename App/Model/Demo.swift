@@ -121,7 +121,9 @@ enum SelfTest {
         home = await LightControl.apply(.brightness(42), to: [bulb.id], in: home)
         HomeStore.save(home)
         let pilot = await WizLink.getPilot(bulb.address)
-        report["after"] = pilot.map { $0.mapValues { "\($0)" } } ?? [:]
+        var after: [String: String] = [:]
+        for (key, value) in pilot ?? [:] { after[key] = "\(value)" }
+        report["after"] = after
         if pilot?["r"] as? Int != 255 || pilot?["b"] as? Int != 128 { problems.append("colour not applied: \(String(describing: pilot))") }
         if pilot?["dimming"] as? Int != 42 { problems.append("brightness not applied") }
 

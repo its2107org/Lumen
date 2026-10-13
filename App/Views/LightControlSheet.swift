@@ -270,8 +270,11 @@ struct BrightnessSlider: View {
         .accessibilityLabel("Brightness")
         .accessibilityValue("\(value) per cent")
         .accessibilityAdjustableAction { direction in
-            let next = direction == .increment ? min(100, value + 10) : max(10, value - 10)
-            onCommit(next)
+            switch direction {
+            case .increment: onCommit(min(100, value + 10))
+            case .decrement: onCommit(max(10, value - 10))
+            @unknown default: break
+            }
         }
     }
 }
@@ -338,8 +341,11 @@ struct KelvinSlider: View {
         .accessibilityLabel("Warmth")
         .accessibilityValue("\(value) kelvin")
         .accessibilityAdjustableAction { direction in
-            let next = direction == .increment ? min(range.upperBound, value + 300) : max(range.lowerBound, value - 300)
-            onCommit(next)
+            switch direction {
+            case .increment: onCommit(min(range.upperBound, value + 300))
+            case .decrement: onCommit(max(range.lowerBound, value - 300))
+            @unknown default: break
+            }
         }
     }
 }

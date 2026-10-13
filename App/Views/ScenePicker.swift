@@ -58,13 +58,14 @@ struct ScenePicker: View {
                     set: { speedDrag = $0 }
                 ),
                 in: 10...200,
-                step: 10
-            ) { editing in
-                if !editing, let speedDrag {
-                    model.commit(.mode(.scene(id: scene.id, speed: Int(speedDrag))), to: ids)
-                    self.speedDrag = nil
+                step: 10,
+                onEditingChanged: { editing in
+                    if !editing, let speedDrag {
+                        model.commit(.mode(.scene(id: scene.id, speed: Int(speedDrag))), to: ids)
+                        self.speedDrag = nil
+                    }
                 }
-            }
+            )
         }
         .padding(16)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))

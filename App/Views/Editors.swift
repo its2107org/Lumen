@@ -195,8 +195,9 @@ struct MoodEditor: View {
                     SymbolGrid(symbols: Symbols.moods, selection: $symbol)
                 }
                 Section("Lights") {
-                    ForEach(groupedLights, id: \.0) { title, lights in
-                        ForEach(lights) { bulb in
+                    ForEach(groupedLights, id: \.0) { group in
+                        let title = group.0
+                        ForEach(group.1) { bulb in
                             Button {
                                 if included.contains(bulb.id) { included.remove(bulb.id) } else { included.insert(bulb.id) }
                             } label: {
