@@ -10,10 +10,15 @@ enum HomeStore {
     /// Demo mode keeps its pretend home in memory only.
     nonisolated(unsafe) static var demoHome: HomeSetup?
 
+    /// A private copy too, in case the shared space isn't available (as in test builds without signing).
+    private static var backupURL: URL? {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("home.json")
+    }
+
     static func load() -> HomeSetup {
         if let demoHome { return demoHome }
-        guard let data = SharedVault.read(service: service, account: account),
-              let home = try? JSONDecoder().decode(HomeSetup.self, from: data) else { return HomeSetup() }
+        let data = SharedVault.read(service: service, account: account) ?? backupURL.flatMap { try? Data(contentsOf: $0) }
+        guard let data, let home = try? JSONDecoder().decode(HomeSetup.self, from: data) else { return HomeSetup() }
         return home
     }
 
@@ -21,7 +26,15 @@ enum HomeStore {
         if demoHome != nil {
             demoHome = home
         } else if let data = try? JSONEncoder().encode(home) {
-            SharedVault.write(data, service: service, account: account)
+            let shared = SharedVault.write(data, service: service, account: account)
+            if let url = backupURL {
+                if shared {
+                    try? FileManager.default.removeItem(at: url)
+                } else {
+                    try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                    try? data.write(to: url, options: .atomic)
+                }
+            }
         }
         if refreshWidgets { refreshSystemSurfaces() }
     }
