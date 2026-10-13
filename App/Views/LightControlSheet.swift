@@ -234,12 +234,14 @@ struct BrightnessSlider: View {
                 HStack {
                     Image(systemName: shown < 40 ? "sun.min.fill" : "sun.max.fill")
                         .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(isOn ? (darkFill ? Color.white : Color.black.opacity(0.72)) : Color.secondary)
                     Spacer()
                     Text("\(Int(shown.rounded()))%")
                         .font(.title3.weight(.semibold).monospacedDigit())
                         .contentTransition(.numericText())
+                        // The number sits on the filled part only near full brightness.
+                        .foregroundStyle(isOn && fraction > 0.85 ? (darkFill ? Color.white : Color.black.opacity(0.72)) : Color.primary)
                 }
-                .foregroundStyle(isOn ? (darkFill ? Color.white : Color.black.opacity(0.72)) : Color.secondary)
                 .padding(.horizontal, 20)
             }
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))

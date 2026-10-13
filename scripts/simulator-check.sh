@@ -53,7 +53,7 @@ kill $BULB 2>/dev/null || true
 shoot() { # name, extra args
   local name=$1; shift
   xcrun simctl launch --terminate-running-process "$UDID" "$BID" "$@"
-  sleep 4
+  sleep 6
   xcrun simctl io "$UDID" screenshot "shots/$name.png"
 }
 for mode in light dark; do

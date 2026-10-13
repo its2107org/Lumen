@@ -111,7 +111,7 @@ struct SceneCard: View {
                     .saturation(0.9)
                     .overlay(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(LinearGradient(colors: [.clear, .black.opacity(0.22)], startPoint: .top, endPoint: .bottom))
+                            .fill(LinearGradient(colors: [.black.opacity(0.08), .black.opacity(0.42)], startPoint: .top, endPoint: .bottom))
                     )
             }
             .overlay {
