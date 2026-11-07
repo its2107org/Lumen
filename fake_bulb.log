@@ -1,0 +1,36 @@
+192.168.64.3 getPilot {}
+192.168.64.3 getSystemConfig {}
+192.168.64.3 getModelConfig {}
+192.168.64.3 setPilot {"b": 128, "dimming": 100, "g": 0, "r": 255, "state": true}
+192.168.64.3 setPilot {"dimming": 42, "state": true}
+192.168.64.3 getPilot {}
+192.168.64.3 setPilot {"state": false}
+192.168.64.3 getPilot {}
+192.168.64.3 setPilot {"dimming": 42, "sceneId": 5, "speed": 150, "state": true}
+192.168.64.3 getPilot {}
+192.168.64.3 setPilot {"dimming": 47, "state": true}
+192.168.64.3 setPilot {"dimming": 50, "state": true}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
+192.168.64.3 setPilot {"dimming": 40, "state": true}
+192.168.64.3 setPilot {"dimming": 30, "state": true}
+192.168.64.3 getPilot {}
+192.168.64.3 setPilot {"b": 255, "dimming": 30, "g": 80, "r": 40, "state": true}
+192.168.64.3 getPilot {}
+192.168.64.3 setPilot {"dimming": 80, "state": true}
+192.168.64.3 getPilot {}
+192.168.64.3 setPilot {"dimming": 70, "state": true}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
+192.168.64.3 setPilot {"state": true}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
+192.168.64.3 getPilot {}
