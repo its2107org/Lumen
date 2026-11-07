@@ -209,10 +209,13 @@ struct RunMoodIntent: LiveActivityIntent {
 /// Used by the Lock Screen and Home Screen room widgets.
 struct RoomWidgetConfiguration: WidgetConfigurationIntent {
     static let title: LocalizedStringResource = "Room"
-    static let description = IntentDescription("Choose which room this widget switches.")
+    static let description = IntentDescription("Choose a room, or particular lights, for this widget to switch.")
 
     @Parameter(title: "Room")
     var room: RoomEntity?
+
+    @Parameter(title: "Lights", description: "Pick particular lights, or leave empty to use the whole room.")
+    var lights: [LightEntity]?
 
     init() {}
 }
@@ -338,10 +341,13 @@ struct WidgetColourIntent: LiveActivityIntent {
 /// Used by the dimmer widget to choose its room.
 struct DimmerWidgetConfiguration: WidgetConfigurationIntent {
     static let title: LocalizedStringResource = "Room"
-    static let description = IntentDescription("Choose which room this widget dims and colours.")
+    static let description = IntentDescription("Choose a room, or particular lights, for this widget to dim and colour.")
 
     @Parameter(title: "Room")
     var room: RoomEntity?
+
+    @Parameter(title: "Lights", description: "Pick particular lights, or leave empty to use the whole room.")
+    var lights: [LightEntity]?
 
     init() {}
 }

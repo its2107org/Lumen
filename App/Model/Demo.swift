@@ -153,6 +153,11 @@ enum SelfTest {
         if levelPilot?["dimming"] as? Int != 80 { problems.append("brightness level not applied") }
         let info = RoomInfo.make(roomID: room.id.uuidString, name: room.name, symbol: room.symbol, home: HomeStore.load())
         if info.brightness != 80 || !info.isOn { problems.append("widget shows wrong brightness: \(info.brightness)") }
+        let picked = LightControl.ids(forRoom: LightControl.lightsPrefix + bulb.id + ",missing", in: HomeStore.load())
+        if picked != [bulb.id] { problems.append("picked lights not matched: \(picked)") }
+        await LightControl.stepRoom(LightControl.lightsPrefix + bulb.id, by: -10)
+        let pickedPilot = await WizLink.getPilot(bulb.address)
+        if pickedPilot?["dimming"] as? Int != 70 { problems.append("picked-lights widget step wrong") }
         report["widgetChecks"] = problems.isEmpty ? "passed" : "failed"
 
         // A light that changed address is found again.

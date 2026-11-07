@@ -229,8 +229,8 @@ struct RoomProvider: AppIntentTimelineProvider {
 
     private func entry(for configuration: RoomWidgetConfiguration) -> RoomEntry {
         let home = HomeStore.load()
-        let room = configuration.room ?? .everywhere
-        return RoomEntry(date: .now, room: RoomInfo.make(roomID: room.id, name: room.name, symbol: room.symbol, home: home))
+        let target = WidgetTarget(room: configuration.room, lights: configuration.lights)
+        return RoomEntry(date: .now, room: RoomInfo.make(roomID: target.id, name: target.name, symbol: target.symbol, home: home))
     }
 }
 
@@ -300,6 +300,32 @@ struct RoomWidgetView: View {
     }
 }
 
+/// What a widget controls: a whole room, or hand-picked lights.
+struct WidgetTarget {
+    let id: String
+    let name: String
+    let symbol: String
+
+    init(room: RoomEntity?, lights: [LightEntity]?) {
+        let room = room ?? .everywhere
+        if let lights, !lights.isEmpty {
+            id = LightEntity.groupID(lights)
+            if lights.count == 1 {
+                name = lights[0].name
+            } else if room.id != RoomEntity.everywhereID {
+                name = room.name
+            } else {
+                name = "\(lights.count) lights"
+            }
+            symbol = room.id == RoomEntity.everywhereID ? (lights.count == 1 ? "lightbulb.fill" : "lightbulb.2.fill") : room.symbol
+        } else {
+            id = room.id
+            name = room.name
+            symbol = room.symbol
+        }
+    }
+}
+
 // MARK: - Dimmer (brightness and colour for one room)
 
 struct DimmerEntry: TimelineEntry {
@@ -324,8 +350,8 @@ struct DimmerProvider: AppIntentTimelineProvider {
     }
 
     private func entry(for configuration: DimmerWidgetConfiguration, home: HomeSetup) -> DimmerEntry {
-        let room = configuration.room ?? .everywhere
-        return DimmerEntry(date: .now, room: RoomInfo.make(roomID: room.id, name: room.name, symbol: room.symbol, home: home), home: home)
+        let target = WidgetTarget(room: configuration.room, lights: configuration.lights)
+        return DimmerEntry(date: .now, room: RoomInfo.make(roomID: target.id, name: target.name, symbol: target.symbol, home: home), home: home)
     }
 }
 

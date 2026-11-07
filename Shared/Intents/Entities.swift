@@ -48,6 +48,47 @@ struct RoomQuery: EntityStringQuery {
     func defaultResult() async -> RoomEntity? { .everywhere }
 }
 
+/// One light, for choosing exactly which lights a widget controls.
+struct LightEntity: AppEntity, Identifiable {
+    let id: String
+    let name: String
+    let roomName: String?
+
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Light"
+    static let defaultQuery = LightQuery()
+
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\(name)", subtitle: roomName.map { "\($0)" }, image: .init(systemName: "lightbulb.fill"))
+    }
+
+    static func all() -> [LightEntity] {
+        let home = HomeStore.load()
+        func key(_ bulb: Bulb) -> (String, String) { (home.room(bulb.roomID)?.name ?? "~", bulb.name) }
+        return home.bulbs
+            .sorted { first, second in key(first) < key(second) }
+            .map { bulb in LightEntity(id: bulb.id, name: bulb.name, roomName: home.room(bulb.roomID)?.name) }
+    }
+
+    /// The id widget buttons use for a hand-picked set of lights.
+    static func groupID(_ lights: [LightEntity]) -> String {
+        LightControl.lightsPrefix + lights.map(\.id).joined(separator: ",")
+    }
+}
+
+struct LightQuery: EntityStringQuery {
+    func entities(for identifiers: [String]) async throws -> [LightEntity] {
+        let all = LightEntity.all()
+        return identifiers.compactMap { id in all.first { $0.id == id } }
+    }
+
+    func entities(matching string: String) async throws -> [LightEntity] {
+        let query = string.lowercased()
+        return LightEntity.all().filter { $0.name.lowercased().contains(query) || ($0.roomName?.lowercased().contains(query) ?? false) }
+    }
+
+    func suggestedEntities() async throws -> [LightEntity] { LightEntity.all() }
+}
+
 /// A saved mood for shortcuts, widgets and Control Centre.
 struct MoodEntity: AppEntity, Identifiable {
     let id: String

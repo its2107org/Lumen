@@ -210,8 +210,15 @@ enum LightControl {
 
     // MARK: Handy group actions (used by widgets, Control Centre and shortcuts)
 
+    /// Widgets set up with hand-picked lights use "lights:<id>,<id>" in place of a room.
+    static let lightsPrefix = "lights:"
+
     static func ids(forRoom roomID: String, in home: HomeSetup) -> [String] {
         if roomID == RoomEntity.everywhereID { return home.bulbs.map(\.id) }
+        if roomID.hasPrefix(lightsPrefix) {
+            let picked = Set(roomID.dropFirst(lightsPrefix.count).split(separator: ",").map(String.init))
+            return home.bulbs.filter { picked.contains($0.id) }.map(\.id)
+        }
         return home.bulbs.filter { $0.roomID?.uuidString == roomID }.map(\.id)
     }
 
