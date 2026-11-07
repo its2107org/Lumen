@@ -26,6 +26,7 @@ targets:
       - path: App
       - path: Shared/Core
       - path: Shared/Intents
+      - path: Shared/WidgetUI
     info:
       path: App/Info.plist
       properties:
@@ -72,6 +73,7 @@ targets:
       - path: Widget
       - path: Shared/Core
       - path: Shared/Intents
+      - path: Shared/WidgetUI
     info:
       path: Widget/Info.plist
       properties:

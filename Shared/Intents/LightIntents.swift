@@ -250,3 +250,157 @@ struct WidgetMoodIntent: LiveActivityIntent {
         return .result()
     }
 }
+
+// MARK: - Dimmer widget and Control Centre brightness and colour
+
+/// Used by the dimmer widget's level bar: sets a room to one brightness.
+struct WidgetBrightnessIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Set Room Brightness"
+    static let isDiscoverable = false
+
+    @Parameter(title: "Room ID")
+    var roomID: String
+
+    @Parameter(title: "Brightness")
+    var level: Int
+
+    init() {}
+    init(roomID: String, level: Int) {
+        self.roomID = roomID
+        self.level = level
+    }
+
+    func perform() async throws -> some IntentResult {
+        await LightControl.setRoom(roomID, .brightness(level))
+        return .result()
+    }
+}
+
+/// Used by the dimmer widget's minus and plus buttons.
+struct WidgetStepBrightnessIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Brighter or Dimmer"
+    static let isDiscoverable = false
+
+    @Parameter(title: "Room ID")
+    var roomID: String
+
+    @Parameter(title: "Step")
+    var step: Int
+
+    init() {}
+    init(roomID: String, step: Int) {
+        self.roomID = roomID
+        self.step = step
+    }
+
+    func perform() async throws -> some IntentResult {
+        await LightControl.stepRoom(roomID, by: step)
+        return .result()
+    }
+}
+
+/// Used by the dimmer widget's colour swatches. A kelvin above zero means a shade of white.
+struct WidgetColourIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Set Room Colour"
+    static let isDiscoverable = false
+
+    @Parameter(title: "Room ID")
+    var roomID: String
+
+    @Parameter(title: "White temperature")
+    var kelvin: Int
+
+    @Parameter(title: "Red")
+    var red: Int
+
+    @Parameter(title: "Green")
+    var green: Int
+
+    @Parameter(title: "Blue")
+    var blue: Int
+
+    init() {}
+    init(roomID: String, kelvin: Int, red: Int, green: Int, blue: Int) {
+        self.roomID = roomID
+        self.kelvin = kelvin
+        self.red = red
+        self.green = green
+        self.blue = blue
+    }
+
+    func perform() async throws -> some IntentResult {
+        let mode: LightMode = kelvin > 0 ? .white(kelvin: kelvin) : .colour(red: red, green: green, blue: blue)
+        await LightControl.setRoom(roomID, .mode(mode))
+        return .result()
+    }
+}
+
+/// Used by the dimmer widget to choose its room.
+struct DimmerWidgetConfiguration: WidgetConfigurationIntent {
+    static let title: LocalizedStringResource = "Room"
+    static let description = IntentDescription("Choose which room this widget dims and colours.")
+
+    @Parameter(title: "Room")
+    var room: RoomEntity?
+
+    init() {}
+}
+
+/// Control Centre: brighter or dimmer buttons for a room.
+struct ControlStepBrightnessIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Brighter or Dimmer"
+    static let isDiscoverable = false
+
+    @Parameter(title: "Room")
+    var room: RoomEntity?
+
+    @Parameter(title: "Step")
+    var step: Int
+
+    init() {}
+    init(room: RoomEntity?, step: Int) {
+        self.room = room
+        self.step = step
+    }
+
+    func perform() async throws -> some IntentResult {
+        await LightControl.stepRoom(room?.id ?? RoomEntity.everywhereID, by: step)
+        return .result()
+    }
+}
+
+struct ColourControlConfiguration: ControlConfigurationIntent {
+    static let title: LocalizedStringResource = "Room colour"
+    static let isDiscoverable = false
+
+    @Parameter(title: "Room")
+    var room: RoomEntity?
+
+    @Parameter(title: "Colour")
+    var colour: ColourChoice?
+
+    init() {}
+}
+
+/// Control Centre: sets a room to a chosen colour.
+struct ControlColourIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Set Room Colour"
+    static let isDiscoverable = false
+
+    @Parameter(title: "Room")
+    var room: RoomEntity?
+
+    @Parameter(title: "Colour")
+    var colour: ColourChoice?
+
+    init() {}
+    init(room: RoomEntity?, colour: ColourChoice?) {
+        self.room = room
+        self.colour = colour
+    }
+
+    func perform() async throws -> some IntentResult {
+        await LightControl.setRoom(room?.id ?? RoomEntity.everywhereID, .mode((colour ?? .warmWhite).mode))
+        return .result()
+    }
+}

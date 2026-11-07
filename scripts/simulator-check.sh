@@ -65,5 +65,6 @@ for mode in light dark; do
   shoot "mood-$mode" -LumenDemo -LumenDemoMood
   shoot "settings-$mode" -LumenDemo -LumenDemoSettings
   shoot "welcome-$mode" -LumenDemoWelcome
+  shoot "widgets-$mode" -LumenDemo -LumenDemoWidgets
 done
 ls -la shots

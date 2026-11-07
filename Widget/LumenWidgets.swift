@@ -8,39 +8,17 @@ struct LumenWidgets: WidgetBundle {
         RoomsWidget()
         MoodsWidget()
         RoomWidget()
+        DimmerWidget()
         RoomToggleControl()
+        BrighterControl()
+        DimmerControl()
+        ColourControl()
         MoodControl()
         AllOffControl()
     }
 }
 
 // MARK: - Shared bits
-
-struct RoomInfo: Identifiable {
-    let id: String
-    let name: String
-    let symbol: String
-    let isOn: Bool
-    let colors: [Color]
-    let darkColour: Bool
-
-    static func make(roomID: String, name: String, symbol: String, home: HomeSetup) -> RoomInfo {
-        let ids = Set(LightControl.ids(forRoom: roomID, in: home))
-        let lit = home.bulbs.filter { ids.contains($0.id) && $0.state.on }
-        var colors: [Color] = []
-        for bulb in lit { for color in bulb.state.displayColors where !colors.contains(color) { colors.append(color) } }
-        return RoomInfo(id: roomID, name: name, symbol: symbol, isOn: !lit.isEmpty, colors: Array(colors.prefix(3)),
-                        darkColour: lit.first?.state.isDarkColour ?? false)
-    }
-
-    static func all(in home: HomeSetup) -> [RoomInfo] {
-        let rooms = home.rooms.filter { room in home.bulbs.contains { $0.roomID == room.id } }
-        if rooms.isEmpty {
-            return [make(roomID: RoomEntity.everywhereID, name: "All lights", symbol: "house.fill", home: home)]
-        }
-        return rooms.map { make(roomID: $0.id.uuidString, name: $0.name, symbol: $0.symbol, home: home) }
-    }
-}
 
 struct HomeEntry: TimelineEntry {
     let date: Date
@@ -83,24 +61,6 @@ enum WidgetSample {
                     mood("Fireside", "flame.fill", .scene(id: 5, speed: 100)), mood("Bright", "sun.max.fill", .white(kelvin: 4500))]
         )
     }()
-}
-
-struct RoomBubble: View {
-    let room: RoomInfo
-    var size: CGFloat = 46
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(room.isOn ? AnyShapeStyle(LinearGradient(colors: room.colors.count > 1 ? room.colors : [room.colors.first ?? .orange, (room.colors.first ?? .orange).opacity(0.75)],
-                                                               startPoint: .topLeading, endPoint: .bottomTrailing))
-                                : AnyShapeStyle(Color.secondary.opacity(0.18)))
-            Image(systemName: room.symbol)
-                .font(.system(size: size * 0.4, weight: .semibold))
-                .foregroundStyle(room.isOn ? (room.darkColour ? Color.white : Color.black.opacity(0.75)) : Color.secondary)
-        }
-        .frame(width: size, height: size)
-    }
 }
 
 private struct EmptyHomeView: View {
@@ -340,6 +300,62 @@ struct RoomWidgetView: View {
     }
 }
 
+// MARK: - Dimmer (brightness and colour for one room)
+
+struct DimmerEntry: TimelineEntry {
+    let date: Date
+    let room: RoomInfo?
+    let home: HomeSetup
+}
+
+struct DimmerProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> DimmerEntry {
+        DimmerEntry(date: .now, room: RoomInfo.all(in: WidgetSample.home).first, home: WidgetSample.home)
+    }
+
+    func snapshot(for configuration: DimmerWidgetConfiguration, in context: Context) async -> DimmerEntry {
+        let home = HomeStore.load()
+        if home.bulbs.isEmpty && context.isPreview { return placeholder(in: context) }
+        return entry(for: configuration, home: home)
+    }
+
+    func timeline(for configuration: DimmerWidgetConfiguration, in context: Context) async -> Timeline<DimmerEntry> {
+        Timeline(entries: [entry(for: configuration, home: HomeStore.load())], policy: .after(.now.addingTimeInterval(30 * 60)))
+    }
+
+    private func entry(for configuration: DimmerWidgetConfiguration, home: HomeSetup) -> DimmerEntry {
+        let room = configuration.room ?? .everywhere
+        return DimmerEntry(date: .now, room: RoomInfo.make(roomID: room.id, name: room.name, symbol: room.symbol, home: home), home: home)
+    }
+}
+
+struct DimmerWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "LumenDimmer", intent: DimmerWidgetConfiguration.self, provider: DimmerProvider()) { entry in
+            DimmerFamilyView(entry: entry)
+                .containerBackground(.fill.tertiary, for: .widget)
+        }
+        .configurationDisplayName("Brightness and colour")
+        .description("Dim, brighten and change the colour of a room's lights.")
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular])
+    }
+}
+
+private struct DimmerFamilyView: View {
+    let entry: DimmerEntry
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        let layout: DimmerLayout = switch family {
+        case .systemSmall: .small
+        case .systemLarge, .systemExtraLarge: .large
+        case .accessoryRectangular: .lockScreen
+        default: .medium
+        }
+        DimmerWidgetView(room: entry.room, home: entry.home, layout: layout)
+    }
+}
+
 // MARK: - Control Centre
 
 struct RoomControlValue {
@@ -399,5 +415,65 @@ struct AllOffControl: ControlWidget {
         }
         .displayName("All lights off")
         .description("Switch every light off.")
+    }
+}
+
+struct BrighterControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        AppIntentControlConfiguration(kind: "LumenBrighterControl", provider: RoomPickProvider()) { room in
+            ControlWidgetButton(action: ControlStepBrightnessIntent(room: room, step: 10)) {
+                Label("\(room.name) brighter", systemImage: "sun.max.fill")
+            }
+        }
+        .displayName("Brighter")
+        .description("Make a room's lights a little brighter.")
+        .promptsForUserConfiguration()
+    }
+}
+
+struct DimmerControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        AppIntentControlConfiguration(kind: "LumenDimmerControl", provider: RoomPickProvider()) { room in
+            ControlWidgetButton(action: ControlStepBrightnessIntent(room: room, step: -10)) {
+                Label("\(room.name) dimmer", systemImage: "sun.min")
+            }
+        }
+        .displayName("Dimmer")
+        .description("Make a room's lights a little dimmer.")
+        .promptsForUserConfiguration()
+    }
+}
+
+struct RoomPickProvider: AppIntentControlValueProvider {
+    func previewValue(configuration: RoomControlConfiguration) -> RoomEntity { configuration.room ?? .everywhere }
+    func currentValue(configuration: RoomControlConfiguration) async throws -> RoomEntity { configuration.room ?? .everywhere }
+}
+
+struct ColourControlValue {
+    var room: RoomEntity
+    var colour: ColourChoice
+}
+
+struct ColourControlProvider: AppIntentControlValueProvider {
+    func previewValue(configuration: ColourControlConfiguration) -> ColourControlValue {
+        ColourControlValue(room: configuration.room ?? .everywhere, colour: configuration.colour ?? .warmWhite)
+    }
+
+    func currentValue(configuration: ColourControlConfiguration) async throws -> ColourControlValue {
+        previewValue(configuration: configuration)
+    }
+}
+
+struct ColourControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        AppIntentControlConfiguration(kind: "LumenColourControl", provider: ColourControlProvider()) { value in
+            ControlWidgetButton(action: ControlColourIntent(room: value.room, colour: value.colour)) {
+                Label(value.colour.name, systemImage: value.colour.isWhite ? "lightbulb.fill" : "paintpalette.fill")
+            }
+            .tint(value.colour.tint)
+        }
+        .displayName("Room colour")
+        .description("Set a room's lights to a chosen colour.")
+        .promptsForUserConfiguration()
     }
 }

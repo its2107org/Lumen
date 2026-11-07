@@ -136,6 +136,25 @@ enum SelfTest {
         let scenePilot = await WizLink.getPilot(bulb.address)
         if scenePilot?["sceneId"] as? Int != 5 || scenePilot?["speed"] as? Int != 150 { problems.append("scene not applied") }
 
+        // Widget brightness steps and colour swatches.
+        await LightControl.setRoom(room.id.uuidString, .brightness(47))
+        await LightControl.stepRoom(room.id.uuidString, by: 10)
+        let upPilot = await WizLink.getPilot(bulb.address)
+        if upPilot?["dimming"] as? Int != 50 { problems.append("brighter step wrong: \(String(describing: upPilot?["dimming"]))") }
+        await LightControl.stepRoom(room.id.uuidString, by: -10)
+        await LightControl.stepRoom(room.id.uuidString, by: -10)
+        let downPilot = await WizLink.getPilot(bulb.address)
+        if downPilot?["dimming"] as? Int != 30 { problems.append("dimmer step wrong: \(String(describing: downPilot?["dimming"]))") }
+        _ = try? await WidgetColourIntent(roomID: room.id.uuidString, kelvin: 0, red: 40, green: 80, blue: 255).perform()
+        let swatchPilot = await WizLink.getPilot(bulb.address)
+        if swatchPilot?["b"] as? Int != 255 || swatchPilot?["g"] as? Int != 80 { problems.append("colour swatch not applied") }
+        _ = try? await WidgetBrightnessIntent(roomID: room.id.uuidString, level: 80).perform()
+        let levelPilot = await WizLink.getPilot(bulb.address)
+        if levelPilot?["dimming"] as? Int != 80 { problems.append("brightness level not applied") }
+        let info = RoomInfo.make(roomID: room.id.uuidString, name: room.name, symbol: room.symbol, home: HomeStore.load())
+        if info.brightness != 80 || !info.isOn { problems.append("widget shows wrong brightness: \(info.brightness)") }
+        report["widgetChecks"] = problems.isEmpty ? "passed" : "failed"
+
         // A light that changed address is found again.
         guard searchWorked else {
             finish(report, problems)

@@ -220,6 +220,39 @@ enum LightControl {
         return home.bulbs.contains { ids.contains($0.id) && $0.state.on }
     }
 
+    /// Average brightness of a room's lit lights (or of all its lights when it's off).
+    static func brightness(roomID: String, in home: HomeSetup) -> Int {
+        let ids = Set(ids(forRoom: roomID, in: home))
+        let dimmable = home.bulbs.filter { ids.contains($0.id) && $0.kind.hasBrightness }
+        let lit = dimmable.filter(\.state.on)
+        let pool = lit.isEmpty ? dimmable : lit
+        guard !pool.isEmpty else { return 100 }
+        return pool.map(\.state.brightness).reduce(0, +) / pool.count
+    }
+
+    /// Makes a room brighter or dimmer by a step. Brighter switches it on if it's off; dimming
+    /// below the lowest level switches it off.
+    static func stepRoom(_ roomID: String, by step: Int) async {
+        let home = HomeStore.load()
+        let ids = ids(forRoom: roomID, in: home)
+        let change: LightChange
+        if !isOn(roomID: roomID, in: home) {
+            guard step > 0 else { return }
+            change = .power(true)
+        } else {
+            let current = brightness(roomID: roomID, in: home)
+            // Snap to the step grid so repeated taps land on round numbers (10, 20, 30...).
+            let size = max(1, abs(step))
+            let target = step > 0 ? (current / size + 1) * size : ((current + size - 1) / size - 1) * size
+            if step < 0 && current <= 10 {
+                change = .power(false)
+            } else {
+                change = .brightness(min(100, max(10, target)))
+            }
+        }
+        HomeStore.save(await apply(change, to: ids, in: home))
+    }
+
     @discardableResult
     static func setRoom(_ roomID: String, _ change: LightChange) async -> HomeSetup {
         let home = HomeStore.load()

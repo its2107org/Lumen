@@ -6,7 +6,9 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if model.bulbs.isEmpty {
+            if ProcessInfo.processInfo.arguments.contains("-LumenDemoWidgets") {
+                WidgetGallery()
+            } else if model.bulbs.isEmpty {
                 WelcomeView()
             } else {
                 HomeView()
