@@ -165,6 +165,30 @@ struct DimmerWidgetView: View {
                     }
                 }
             }
+            if !home.moods.isEmpty {
+                sectionLabel("Moods")
+                HStack(spacing: 6) {
+                    ForEach(home.moods.prefix(4)) { mood in
+                        Button(intent: WidgetMoodIntent(moodID: mood.id.uuidString)) {
+                            VStack(spacing: 3) {
+                                Image(systemName: mood.symbol)
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .shadow(radius: 1)
+                                    .frame(width: 24, height: 24)
+                                    .background(Circle().fill(AngularGradient(colors: mood.previewColors + [mood.previewColors.first ?? .orange], center: .center)))
+                                Text(mood.name)
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 48)
+                            .background(Color.secondary.opacity(0.14), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
             Spacer(minLength: 0)
         }
     }
